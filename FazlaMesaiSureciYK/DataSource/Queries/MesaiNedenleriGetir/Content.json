@@ -1,0 +1,42 @@
+{
+  "content": {
+    "name": "MesaiNedenleriGetir",
+    "connectionId": "2152b45a-ab1d-4556-a8ea-5ef384483e10",
+    "connectionName": {
+      "tr-TR": "Danismanlik"
+    },
+    "connectionType": 1,
+    "description": {},
+    "id": null,
+    "properties": {
+      "cacheTTL": 60000,
+      "cacheType": "Memory",
+      "enableCache": true,
+      "timeout": 60,
+      "commandText": "SELECT DGID , MesaiNedeni FROM E_FazlaMesaiSureciYK_FazlaMesaiNedenleri_dgFazlaMesaiNedeni DG \r\nINNER JOIN E_FazlaMesaiSureciYK_FazlaMesaiNedenleri_dgFazlaMesaiNedeniML DGML ON DG.ID = DGML.PARENTID",
+      "parameters": [],
+      "commandType": 1,
+      "executionType": 3
+    },
+    "structure": {
+      "columns": [
+        {
+          "name": "DGID",
+          "type": 15,
+          "caption": "DGID",
+          "columns": []
+        },
+        {
+          "name": "MesaiNedeni",
+          "type": 1,
+          "caption": "MesaiNedeni",
+          "columns": []
+        }
+      ],
+      "returnType": 10
+    }
+  },
+  "analyser": {
+    "selectStatement": {}
+  }
+}

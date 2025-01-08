@@ -1,0 +1,167 @@
+{
+  "content": {
+    "name": "OdemeTalepArsivi_DataSource",
+    "connectionId": "2152b45a-ab1d-4556-a8ea-5ef384483e10",
+    "connectionName": {
+      "tr-TR": "Danismanlik"
+    },
+    "connectionType": 1,
+    "description": {},
+    "id": null,
+    "properties": {
+      "cacheTTL": 60000,
+      "cacheType": "Memory",
+      "enableCache": false,
+      "timeout": 60,
+      "commandText": "DECLARE @DefaultLanguage NVARCHAR(11)\nSELECT TOP 1 @DefaultLanguage = CULTURE from LANGUAGES WHERE ISDEFAULT = 1\nDECLARE @ProjectId NVARCHAR(38)\nSELECT TOP 1 @ProjectId = ID FROM PROJECTS WHERE NAME='FazlaMesaiSureciYK' AND STATUS=1\nDECLARE @FlowId NVARCHAR(38)\nSELECT TOP 1 @FlowId = ID FROM PROJECTFLOWS WHERE NAME='TalepAkisi' AND PROJECTID=@ProjectId\n\nSELECT\n    PROCESSES.ID AS ProcessId,\n    PROCESSREQUESTS.ID AS RequestId,\n    PROCESSES.USERID AS userId,\n    CREATORUSER.NAME AS ProcessCreator,\n    PROCESSES.CREATEDATE AS ProcessStartDate,\n    FLOWSTATUS.STATUSID AS ProcessStatusNo,\n    COALESCE(NULLIF(PROJECTFLOWSTATUSESML_UserCulture.CAPTION, ''), NULLIF(PROJECTFLOWSTATUSESML_DefaultCulture.CAPTION, ''), NULLIF(PROJECTFLOWSTATUSESML_SystemCulture.CAPTION, '')) AS ProcessStatus,\n    PUBLISHMENT.PACKAGEVERSION AS PackageVersion,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.dtTarih AS dtTarih,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.removeValue AS removeValue,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.tpBaslangicSaati AS tpBaslangicSaati,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.tpBitisSaati AS tpBitisSaati,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.umTalepEden AS umTalepEden,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.CREATEDAT AS CREATEDAT,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.UNIQUEID AS UNIQUEID,\n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.DOCUMENTID AS documentId,\n    COALESCE(NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_SystemCulture.nbFazlaMesaiSuresi, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_UserCulture.nbFazlaMesaiSuresi, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_DefaultCulture.nbFazlaMesaiSuresi, '')) AS nbFazlaMesaiSuresi,\n    COALESCE(NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_SystemCulture.taAciklama, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_UserCulture.taAciklama, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_DefaultCulture.taAciklama, '')) AS taAciklama,\n    COALESCE(NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_SystemCulture.umDepartman, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_UserCulture.umDepartman, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_DefaultCulture.umDepartman, '')) AS umDepartman,\n    COALESCE(NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_SystemCulture.umUnvan, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_UserCulture.umUnvan, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormu_DefaultCulture.umUnvan, '')) AS umUnvan,\n    cbMesaiNedeni.VALUE AS cbMesaiNedeni\nFROM PROCESSES WITH(NOLOCK)\nOUTER APPLY (SELECT TOP 1 ID FROM PROCESSREQUESTS WITH(NOLOCK) WHERE PROCESSREQUESTS.PROCESSID = PROCESSES.ID AND PROCESSREQUESTS.REQUESTTYPE IN (1,2,3) ORDER BY PROCESSREQUESTS.ID DESC) PROCESSREQUESTS\n\nOUTER APPLY (SELECT DOCUMENTID FROM PROCESSREQUESTDOCUMENTS WITH(NOLOCK) WHERE PROCESSREQUESTDOCUMENTS.PROCESSREQUESTID = PROCESSREQUESTS.ID) PROCESSREQUESTDOCUMENTS\nOUTER APPLY (SELECT * FROM E_FazlaMesaiSureciYK_FazlaMesaiFormu WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormu.DOCUMENTID = PROCESSREQUESTDOCUMENTS.DOCUMENTID) E_FazlaMesaiSureciYK_FazlaMesaiFormu\n\nOUTER APPLY (SELECT TOP 1 CONCAT(OSUSERS.FIRSTNAME, ' ', OSUSERS.LASTNAME) NAME FROM OSUSERS WITH(NOLOCK) WHERE OSUSERS.ID = PROCESSES.USERID) CREATORUSER\nOUTER APPLY (SELECT TOP 1 STATUSID FROM PROJECTFLOWSTATUSES WITH(NOLOCK) WHERE PROJECTFLOWSTATUSES.ID = PROCESSES.FLOWSTATUSID) FLOWSTATUS\nOUTER APPLY (SELECT TOP 1 CAPTION FROM PROJECTFLOWSTATUSESML WITH(NOLOCK) WHERE PROJECTFLOWSTATUSESML.FLOWSTATUSID=PROCESSES.FLOWSTATUSID AND PROJECTFLOWSTATUSESML.CULTURE = {{Culture}}) PROJECTFLOWSTATUSESML_UserCulture\nOUTER APPLY (SELECT TOP 1 CAPTION FROM PROJECTFLOWSTATUSESML WITH(NOLOCK) WHERE PROJECTFLOWSTATUSESML.FLOWSTATUSID=PROCESSES.FLOWSTATUSID AND PROJECTFLOWSTATUSESML.CULTURE = @DefaultLanguage) PROJECTFLOWSTATUSESML_DefaultCulture\nOUTER APPLY (SELECT TOP 1 CAPTION FROM PROJECTFLOWSTATUSESML WITH(NOLOCK) WHERE PROJECTFLOWSTATUSESML.FLOWSTATUSID=PROCESSES.FLOWSTATUSID AND PROJECTFLOWSTATUSESML.CULTURE = 'system') PROJECTFLOWSTATUSESML_SystemCulture\nOUTER APPLY (SELECT TOP 1 PACKAGEVERSION FROM PROJECTCOREDEPLOYMENTS WITH(NOLOCK) LEFT JOIN PROJECTCOREPUBLISHMENTS WITH(NOLOCK) ON PROJECTCOREPUBLISHMENTS.ID = PROJECTCOREDEPLOYMENTS.PUBLISHMENTID WHERE PROJECTCOREDEPLOYMENTS.ID = PROCESSES.DEPLOYMENTID) PUBLISHMENT\n\nOUTER APPLY (SELECT nbFazlaMesaiSuresi,taAciklama,umDepartman,umUnvan FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormu.ID = E_FazlaMesaiSureciYK_FazlaMesaiFormuML.PARENTID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuML.CULTURE = {{Culture}}) E_FazlaMesaiSureciYK_FazlaMesaiFormu_UserCulture\nOUTER APPLY (SELECT nbFazlaMesaiSuresi,taAciklama,umDepartman,umUnvan FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormu.ID = E_FazlaMesaiSureciYK_FazlaMesaiFormuML.PARENTID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuML.CULTURE = 'system') E_FazlaMesaiSureciYK_FazlaMesaiFormu_SystemCulture\nOUTER APPLY (SELECT nbFazlaMesaiSuresi,taAciklama,umDepartman,umUnvan FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormu.ID = E_FazlaMesaiSureciYK_FazlaMesaiFormuML.PARENTID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuML.CULTURE = @DefaultLanguage) E_FazlaMesaiSureciYK_FazlaMesaiFormu_DefaultCulture\n\nOUTER APPLY (\n  SELECT STRING_AGG(COALESCE(NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_UserCulture.TEXT, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_DefaultCulture.TEXT, ''), NULLIF(E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_SystemCulture.TEXT, '')), ',') VALUE\n  FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuSL WITH(NOLOCK)\n  OUTER APPLY (SELECT TEXT FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.PARENTID=E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.ID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.CULTURE = {{Culture}}) E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_UserCulture\n  OUTER APPLY (SELECT TEXT FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.PARENTID=E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.ID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.CULTURE = @DefaultLanguage) E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_DefaultCulture\n  OUTER APPLY (SELECT TEXT FROM E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML WITH(NOLOCK) WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.PARENTID=E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.ID AND E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML.CULTURE = 'system') E_FazlaMesaiSureciYK_FazlaMesaiFormuSLML_SystemCulture\n  WHERE E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.PARENTID=E_FazlaMesaiSureciYK_FazlaMesaiFormu.ID AND\n        E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.CONTROLID='cbMesaiNedeni'\n  GROUP BY E_FazlaMesaiSureciYK_FazlaMesaiFormuSL.PARENTID\n) cbMesaiNedeni\n\n\nWHERE PROCESSES.DELETEDATE IS NULL AND\n    PROCESSES.PROJECTID = @ProjectId AND\n    PROCESSES.FLOWID = @FlowId AND\n    FLOWSTATUS.STATUSID = 3 AND \n    E_FazlaMesaiSureciYK_FazlaMesaiFormu.removeValue != 1\n\nORDER BY PROCESSES.ID DESC\n\n",
+      "parameters": [
+        {
+          "caption": "Culture",
+          "isActive": true,
+          "isRequired": true,
+          "key": "Culture",
+          "value": "%User.Language%",
+          "valueType": 1,
+          "length": 10,
+          "subType": null
+        }
+      ],
+      "commandType": 1,
+      "executionType": 3
+    },
+    "structure": {
+      "columns": [
+        {
+          "name": "ProcessId",
+          "type": 3,
+          "caption": "ProcessId",
+          "columns": []
+        },
+        {
+          "name": "RequestId",
+          "type": 3,
+          "caption": "RequestId",
+          "columns": []
+        },
+        {
+          "name": "userId",
+          "type": 3,
+          "caption": "userId",
+          "columns": []
+        },
+        {
+          "name": "ProcessCreator",
+          "type": 1,
+          "caption": "ProcessCreator",
+          "columns": []
+        },
+        {
+          "name": "ProcessStartDate",
+          "type": 12,
+          "caption": "ProcessStartDate",
+          "columns": []
+        },
+        {
+          "name": "ProcessStatusNo",
+          "type": 3,
+          "caption": "ProcessStatusNo",
+          "columns": []
+        },
+        {
+          "name": "ProcessStatus",
+          "type": 1,
+          "caption": "ProcessStatus",
+          "columns": []
+        },
+        {
+          "name": "PackageVersion",
+          "type": 3,
+          "caption": "PackageVersion",
+          "columns": []
+        },
+        {
+          "name": "dtTarih",
+          "type": 12,
+          "caption": "dtTarih",
+          "columns": []
+        },
+        {
+          "name": "removeValue",
+          "type": 2,
+          "caption": "removeValue",
+          "columns": []
+        },
+        {
+          "name": "tpBaslangicSaati",
+          "type": 12,
+          "caption": "tpBaslangicSaati",
+          "columns": []
+        },
+        {
+          "name": "tpBitisSaati",
+          "type": 12,
+          "caption": "tpBitisSaati",
+          "columns": []
+        },
+        {
+          "name": "umTalepEden",
+          "type": 1,
+          "caption": "umTalepEden",
+          "columns": []
+        },
+        {
+          "name": "CREATEDAT",
+          "type": 12,
+          "caption": "CREATEDAT",
+          "columns": []
+        },
+        {
+          "name": "UNIQUEID",
+          "type": 1,
+          "caption": "UNIQUEID",
+          "columns": []
+        },
+        {
+          "name": "documentId",
+          "type": 3,
+          "caption": "documentId",
+          "columns": []
+        },
+        {
+          "name": "nbFazlaMesaiSuresi",
+          "type": 1,
+          "caption": "nbFazlaMesaiSuresi",
+          "columns": []
+        },
+        {
+          "name": "taAciklama",
+          "type": 1,
+          "caption": "taAciklama",
+          "columns": []
+        },
+        {
+          "name": "umDepartman",
+          "type": 1,
+          "caption": "umDepartman",
+          "columns": []
+        },
+        {
+          "name": "umUnvan",
+          "type": 1,
+          "caption": "umUnvan",
+          "columns": []
+        },
+        {
+          "name": "cbMesaiNedeni",
+          "type": 1,
+          "caption": "cbMesaiNedeni",
+          "columns": []
+        }
+      ],
+      "returnType": 10
+    }
+  },
+  "analyser": {
+    "selectStatement": {}
+  }
+}
